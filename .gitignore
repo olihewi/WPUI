@@ -52,3 +52,5 @@ Assets/BuildReports.meta
 BuildMono/
 
 *.narc*
+hooks/*
+lfs/*
