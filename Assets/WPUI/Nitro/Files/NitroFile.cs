@@ -44,6 +44,8 @@ namespace WPUI.Nitro.Files
             header = ReadStruct<Header>(br);
             if (Magic.Bytes != header.Magic) throw new InvalidMagicException(Magic.Bytes, header.Magic);
         }
+
+        public void WriteHeader(BinaryWriter bw) => WriteStruct(bw, header);
         
         public static NitroFile ParseFile(BinaryReader br)
         {
@@ -61,9 +63,9 @@ namespace WPUI.Nitro.Files
 
         }
         
-        public static T ReadStruct<T>(BinaryReader reader)
+        public static T ReadStruct<T>(BinaryReader br)
         {
-            byte[] bytes = reader.ReadBytes(Marshal.SizeOf<T>());
+            byte[] bytes = br.ReadBytes(Marshal.SizeOf<T>());
             GCHandle handle = GCHandle.Alloc(bytes, GCHandleType.Pinned);
             try
             {
@@ -76,15 +78,39 @@ namespace WPUI.Nitro.Files
             }
         }
 
-        public static T[] ReadStructArray<T>(BinaryReader reader, uint count)
+        public static void WriteStruct<T>(BinaryWriter bw, T obj)
         {
             int size = Marshal.SizeOf<T>();
+            byte[] arr = new byte[size];
+            IntPtr ptr = Marshal.AllocHGlobal(size);
+            try
+            {
+                Marshal.StructureToPtr(obj, ptr, false);
+                Marshal.Copy(ptr, arr, 0, size);
+            }
+            finally
+            {
+                Marshal.FreeHGlobal(ptr);
+            }
+            bw.Write(arr);
+        }
+
+        public static T[] ReadStructArray<T>(BinaryReader br, uint count)
+        {
             T[] arr = new T[count];
             for (int i = 0; i < count; i++)
             {
-                arr[i] = ReadStruct<T>(reader);
+                arr[i] = ReadStruct<T>(br);
             }
             return arr;
+        }
+
+        public static void WriteStructArray<T>(BinaryWriter bw, T[] arr)
+        {
+            for (int i = 0; i < arr.Length; i++)
+            {
+                WriteStruct(bw, arr[i]);
+            }
         }
 
         public static string ReadMagic(BinaryReader reader) => Encoding.ASCII.GetString(reader.ReadBytes(4));

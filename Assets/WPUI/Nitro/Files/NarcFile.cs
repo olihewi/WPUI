@@ -15,7 +15,7 @@ namespace WPUI.Nitro.Files
     #region Blocks
 
         [Magic("FATB")]
-        public sealed class FileAllocationTable : NitroBlock
+        public struct FileAllocationTable
         {
             [FieldOffset(0x00)] public uint FileCount;
             [FieldOffset(0x04)] public FileEntry[] FileEntries;
@@ -30,7 +30,7 @@ namespace WPUI.Nitro.Files
         }
 
         [Magic("FNTB")]
-        public abstract class FileNameTable : NitroBlock
+        public struct FileNameTable
         {
             [FieldOffset(0x00)] public uint NameCount;
             public NameEntry[] NameEntries;
@@ -52,7 +52,7 @@ namespace WPUI.Nitro.Files
         }
 
         [Magic("FIMG")]
-        public abstract class FileImageTable : NitroBlock
+        public struct FileImageTable
         {
             [FieldOffset(0x00)] public byte[] RawData;
         }
