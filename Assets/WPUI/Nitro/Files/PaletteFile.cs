@@ -9,7 +9,7 @@ namespace WPUI.Nitro.Files
     public sealed class PaletteFile : NitroFile
     {
         [Magic("PLTT"), StructLayout(LayoutKind.Explicit)]
-        public struct PLTTBlock
+        public struct PLTTHeader
         {
             [FieldOffset(0x00)] public ColorFormat ColorFormat; // 3 = 4bpp, 4=8bpp
             [FieldOffset(0x04)] public uint ExtendedPalette;
@@ -17,7 +17,7 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x0C)] public uint PaletteDataOffset; // Offset from TTLP+8 to Palette Data
         }
 
-        public PLTTBlock plttBlock;
+        public PLTTHeader PlttHeader;
         public Rgb8Color[] colors;
         public override void Read(BinaryReader br)
         {
@@ -31,9 +31,9 @@ namespace WPUI.Nitro.Files
                 {
                     case "TTLP":
                     {
-                        plttBlock = ReadStruct<PLTTBlock>(br);
-                        br.BaseStream.Seek(blockStart + 8 + plttBlock.PaletteDataOffset, SeekOrigin.Current);
-                        colors = new Rgb8Color[plttBlock.PaletteDataSize / sizeof(uint)];
+                        PlttHeader = ReadStruct<PLTTHeader>(br);
+                        br.BaseStream.Seek(blockStart + 8 + PlttHeader.PaletteDataOffset, SeekOrigin.Current);
+                        colors = new Rgb8Color[PlttHeader.PaletteDataSize / sizeof(uint)];
                         for (int colorIdx = 0; colorIdx < colors.Length; colorIdx++)
                         {
                             colors[colorIdx] = ColorUtils.ReadRgb8FromBgr555(br);
@@ -48,16 +48,16 @@ namespace WPUI.Nitro.Files
 
         public override void Write(BinaryWriter bw)
         {
-            var plltSize = Marshal.SizeOf<PLTTBlock>();
-            plttBlock.PaletteDataSize = (uint)colors.Length * 2;
-            plttBlock.PaletteDataOffset = (uint)(bw.BaseStream.Position + plltSize);
+            var plltSize = Marshal.SizeOf<PLTTHeader>();
+            PlttHeader.PaletteDataSize = (uint)colors.Length * 2;
+            PlttHeader.PaletteDataOffset = (uint)(bw.BaseStream.Position + plltSize);
             header.BlockCount = 1;
-            header.FileSize = header.HeaderSize + 8u + (uint)plltSize + plttBlock.PaletteDataSize;
+            header.FileSize = header.HeaderSize + 8u + (uint)plltSize + PlttHeader.PaletteDataSize;
             
             WriteHeader(bw);
-            bw.Write(MagicAttribute.GetMagicBytes(typeof(PLTTBlock)));
-            bw.Write(8U + (uint)plltSize + plttBlock.PaletteDataSize);
-            WriteStruct(bw, plttBlock);
+            bw.Write(MagicAttribute.GetMagicBytes(typeof(PLTTHeader)));
+            bw.Write(8U + (uint)plltSize + PlttHeader.PaletteDataSize);
+            WriteStruct(bw, PlttHeader);
             for (int i = 0; i < colors.Length; i++)
             {
                 bw.Write(ColorUtils.Rgb8ToBgr555(colors[i]));

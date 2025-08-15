@@ -9,7 +9,7 @@ namespace WPUI.Nitro.Files
     public sealed class TilesFile : NitroFile
     {
         [Magic("CHAR"), StructLayout(LayoutKind.Explicit)]
-        public struct CHARBlock
+        public struct CHARHeader
         {
             [FieldOffset(0x00)] public ushort Width;
             [FieldOffset(0x02)] public ushort Height;
@@ -21,7 +21,7 @@ namespace WPUI.Nitro.Files
         }
 
         [Magic("CPOS"), StructLayout(LayoutKind.Explicit)]
-        public struct CPOSBlock
+        public struct CPOSHeader
         {
             [FieldOffset(0x00)] public ushort X;
             [FieldOffset(0x02)] public ushort Y;
@@ -44,8 +44,8 @@ namespace WPUI.Nitro.Files
             Bitmap = 1,
         }
 
-        public CHARBlock CharBlock;
-        public CPOSBlock CposBlock;
+        public CHARHeader CharHeader;
+        public CPOSHeader CposHeader;
         public byte[] GraphicsData;
         public override void Read(BinaryReader br)
         {
@@ -59,14 +59,14 @@ namespace WPUI.Nitro.Files
                 {
                     case "RAHC":
                     {
-                        CharBlock = ReadStruct<CHARBlock>(br);
-                        br.BaseStream.Seek(blockStart + 8 + CharBlock.GraphicsDataOffset, SeekOrigin.Current);
-                        GraphicsData = br.ReadBytes((int)CharBlock.GraphicsDataSize);
+                        CharHeader = ReadStruct<CHARHeader>(br);
+                        br.BaseStream.Seek(blockStart + 8 + CharHeader.GraphicsDataOffset, SeekOrigin.Current);
+                        GraphicsData = br.ReadBytes((int)CharHeader.GraphicsDataSize);
                         break;
                     }
                     case "SOPC":
                     {
-                        CposBlock = ReadStruct<CPOSBlock>(br);
+                        CposHeader = ReadStruct<CPOSHeader>(br);
                         break;
                     }
                 }

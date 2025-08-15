@@ -11,7 +11,7 @@ namespace WPUI.Nitro.Files
     public sealed class CellsFile : NitroFile
     {
         [Magic("CEBK"), StructLayout(LayoutKind.Explicit)]
-        public struct CEBKBlock
+        public struct CEBKHeader
         {
             [FieldOffset(0x00)] public ushort CellCount;
             [FieldOffset(0x02)] public CellBankAttributes CellBankAttributes;
@@ -29,7 +29,7 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x00)] public ushort OamCount;
             [FieldOffset(0x02)] public ushort CellAttributes;
             [FieldOffset(0x04)] public uint OamDataOffset; // Relative to start of OAM data (after cell array)
-            // Optional, determined by CEBKBlock.CellBankAttributes
+            // Optional, determined by CEBKHeader.CellBankAttributes
             [FieldOffset(0x08)] public short xMax;
             [FieldOffset(0x0A)] public short yMax;
             [FieldOffset(0x0C)] public short xMin;
@@ -46,7 +46,7 @@ namespace WPUI.Nitro.Files
             ContainsBoundingBoxes = 1,
         }
 
-        public CEBKBlock cebkBlock;
+        public CEBKHeader CebkHeader;
         public Cell[] Cells;
         public override void Read(BinaryReader br)
         {
@@ -60,14 +60,14 @@ namespace WPUI.Nitro.Files
                 {
                     case "KBEC":
                     {
-                        cebkBlock = ReadStruct<CEBKBlock>(br);
-                        bool containsBoundingBoxes = (cebkBlock.CellBankAttributes & CellBankAttributes.ContainsBoundingBoxes) != 0;
-                        var cellsBase = blockStart + 8 + cebkBlock.CellDataOffset;
+                        CebkHeader = ReadStruct<CEBKHeader>(br);
+                        bool containsBoundingBoxes = (CebkHeader.CellBankAttributes & CellBankAttributes.ContainsBoundingBoxes) != 0;
+                        var cellsBase = blockStart + 8 + CebkHeader.CellDataOffset;
                         var cellStride = containsBoundingBoxes ? 0x10 : 0x08;
-                        var oamsBase = cellsBase + cebkBlock.CellCount * cellStride;
+                        var oamsBase = cellsBase + CebkHeader.CellCount * cellStride;
                         
-                        Cells = new Cell[cebkBlock.CellCount];
-                        for (int cellIdx = 0; cellIdx < cebkBlock.CellCount; cellIdx++)
+                        Cells = new Cell[CebkHeader.CellCount];
+                        for (int cellIdx = 0; cellIdx < CebkHeader.CellCount; cellIdx++)
                         {
                             br.BaseStream.Seek(cellsBase + cellIdx * cellStride, SeekOrigin.Current);
                             var cell = new Cell()

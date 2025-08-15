@@ -37,7 +37,7 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x07)] public byte Priority;
         }
 
-        public MCBKHeader mcbkHeader;
+        public MCBKHeader McbkHeader;
         public MappedAnimation[] MappedAnimations;
         
         public override void Read(BinaryReader br)
@@ -52,12 +52,12 @@ namespace WPUI.Nitro.Files
                 {
                     case "KBCM":
                     {
-                        mcbkHeader = ReadStruct<MCBKHeader>(br);
-                        br.BaseStream.Seek(blockStart + 8 + mcbkHeader.MappedAnimationDataOffset, SeekOrigin.Current);
-                        MappedAnimations = ReadStructArray<MappedAnimation>(br, mcbkHeader.AnimationCount);
-                        for (int animationIdx = 0; animationIdx < mcbkHeader.AnimationCount; animationIdx++)
+                        McbkHeader = ReadStruct<MCBKHeader>(br);
+                        br.BaseStream.Seek(blockStart + 8 + McbkHeader.MappedAnimationDataOffset, SeekOrigin.Current);
+                        MappedAnimations = ReadStructArray<MappedAnimation>(br, McbkHeader.AnimationCount);
+                        for (int animationIdx = 0; animationIdx < McbkHeader.AnimationCount; animationIdx++)
                         {
-                            br.BaseStream.Seek(blockStart + 8 + mcbkHeader.MappedAnimationCellDataOffset + MappedAnimations[animationIdx].MappedAnimationCellDataOffset, SeekOrigin.Current);
+                            br.BaseStream.Seek(blockStart + 8 + McbkHeader.MappedAnimationCellDataOffset + MappedAnimations[animationIdx].MappedAnimationCellDataOffset, SeekOrigin.Current);
                             MappedAnimations[animationIdx].MappedAnimationCells =
                                 ReadStructArray<MappedAnimationCell>(br, MappedAnimations[animationIdx].CellCount);
                         }

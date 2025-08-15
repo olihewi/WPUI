@@ -9,7 +9,7 @@ namespace WPUI.Nitro.Files
     public sealed class AnimationsFile : NitroFile
     {
         [Magic("ABNK"), StructLayout(LayoutKind.Explicit)]
-        public struct ABNKBlock
+        public struct ABNKHeader
         {
             [FieldOffset(0x00)] public ushort CellCount;
             [FieldOffset(0x02)] public ushort FrameCount;
@@ -26,7 +26,7 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x04)] public FrameType FrameType;
             [FieldOffset(0x06)] public CellType CellType;
             [FieldOffset(0x08)] public uint _unknown;
-            [FieldOffset(0x0C)] public uint FrameDataOffset; // Relative to ABNKBlock.FrameDataOffset
+            [FieldOffset(0x0C)] public uint FrameDataOffset; // Relative to ABNKHeader.FrameDataOffset
 
             public Frame[] Frames;
         }
@@ -47,7 +47,7 @@ namespace WPUI.Nitro.Files
         [StructLayout(LayoutKind.Explicit, Size = 0x08)]
         public struct Frame
         {
-            [FieldOffset(0x00)] public uint TransformDataOffset; // Relative to ABNKBlock.FrameTransformDataOffset
+            [FieldOffset(0x00)] public uint TransformDataOffset; // Relative to ABNKHeader.FrameTransformDataOffset
             [FieldOffset(0x04)] public ushort FrameDuration; // In frames @ 60FPS
             [FieldOffset(0x06)] public ushort _padding; // Always 0xBEEF
 
@@ -86,7 +86,7 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x06)] public short Y;
         }
 
-        public ABNKBlock abnkBlock;
+        public ABNKHeader AbnkHeader;
         public AnimationCell[] Cells;
         
         public override void Read(BinaryReader br)
@@ -101,17 +101,17 @@ namespace WPUI.Nitro.Files
                 {
                     case "KNBA":
                     {
-                        abnkBlock = ReadStruct<ABNKBlock>(br);
-                        br.BaseStream.Seek(blockStart + 8 + abnkBlock.CellDataOffset, SeekOrigin.Current);
-                        Cells = ReadStructArray<AnimationCell>(br, abnkBlock.CellCount);
-                        for (int cellIdx = 0; cellIdx < abnkBlock.CellCount; cellIdx++)
+                        AbnkHeader = ReadStruct<ABNKHeader>(br);
+                        br.BaseStream.Seek(blockStart + 8 + AbnkHeader.CellDataOffset, SeekOrigin.Current);
+                        Cells = ReadStructArray<AnimationCell>(br, AbnkHeader.CellCount);
+                        for (int cellIdx = 0; cellIdx < AbnkHeader.CellCount; cellIdx++)
                         {
-                            br.BaseStream.Seek(blockStart + 8 + abnkBlock.FrameDataOffset + Cells[cellIdx].FrameDataOffset, SeekOrigin.Current);
+                            br.BaseStream.Seek(blockStart + 8 + AbnkHeader.FrameDataOffset + Cells[cellIdx].FrameDataOffset, SeekOrigin.Current);
                             Cells[cellIdx].Frames = ReadStructArray<Frame>(br, Cells[cellIdx].FrameCount);
                             
                             for (int frameIdx = 0; frameIdx < Cells[cellIdx].FrameCount; frameIdx++)
                             {
-                                br.BaseStream.Seek(blockStart + 8 + abnkBlock.FrameTransformDataOffset + Cells[cellIdx].Frames[frameIdx].TransformDataOffset, SeekOrigin.Current);
+                                br.BaseStream.Seek(blockStart + 8 + AbnkHeader.FrameTransformDataOffset + Cells[cellIdx].Frames[frameIdx].TransformDataOffset, SeekOrigin.Current);
                                 Cells[cellIdx].Frames[frameIdx].Transform = Cells[cellIdx].FrameType switch
                                 {
                                     FrameType.CellOnly => ReadStruct<FrameTransformCellOnly>(br),
