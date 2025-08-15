@@ -95,7 +95,7 @@ namespace WPUI.Nitro.Structs
             }
         }
         
-        // Decoded 2: IIII PP TTTTTTTTTT
+        // Decoded from 2: IIII PP TTTTTTTTTT
         public byte PaletteID
         {
             get => (byte)((Attribute2 >> 12) & 0x07);
