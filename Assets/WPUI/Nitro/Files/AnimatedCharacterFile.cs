@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System.Collections.Generic;
+using System.IO;
 using System.Runtime.InteropServices;
 using WPUI.Nitro.Attributes;
 
@@ -23,9 +24,8 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x00)] public ushort CellCount;
             [FieldOffset(0x02)] public ushort _unknown;
             [FieldOffset(0x04)] public uint MappedAnimationCellDataOffset;
-
-            public MappedAnimationCell[] MappedAnimationCells;
         }
+
 
         [StructLayout(LayoutKind.Explicit, Size = 0x08)]
         public struct MappedAnimationCell
@@ -39,6 +39,7 @@ namespace WPUI.Nitro.Files
 
         public MCBKHeader McbkHeader;
         public MappedAnimation[] MappedAnimations;
+        public Dictionary<MappedAnimation, MappedAnimationCell[]> MappedAnimationCellsMap;
         
         public override void Read(BinaryReader br)
         {
@@ -55,11 +56,12 @@ namespace WPUI.Nitro.Files
                         McbkHeader = ReadStruct<MCBKHeader>(br);
                         br.BaseStream.Seek(blockStart + 8 + McbkHeader.MappedAnimationDataOffset, SeekOrigin.Current);
                         MappedAnimations = ReadStructArray<MappedAnimation>(br, McbkHeader.AnimationCount);
+                        MappedAnimationCellsMap =
+                            new Dictionary<MappedAnimation, MappedAnimationCell[]>(McbkHeader.AnimationCount);
                         for (int animationIdx = 0; animationIdx < McbkHeader.AnimationCount; animationIdx++)
                         {
                             br.BaseStream.Seek(blockStart + 8 + McbkHeader.MappedAnimationCellDataOffset + MappedAnimations[animationIdx].MappedAnimationCellDataOffset, SeekOrigin.Current);
-                            MappedAnimations[animationIdx].MappedAnimationCells =
-                                ReadStructArray<MappedAnimationCell>(br, MappedAnimations[animationIdx].CellCount);
+                            MappedAnimationCellsMap[MappedAnimations[animationIdx]] = ReadStructArray<MappedAnimationCell>(br, MappedAnimations[animationIdx].CellCount);
                         }
                         break;
                     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -14,7 +15,7 @@ namespace WPUI.Nitro.Files
         
     #region Blocks
 
-        [Magic("FATB")]
+        [Magic("FATB"), StructLayout(LayoutKind.Explicit)]
         public struct FileAllocationTable
         {
             [FieldOffset(0x00)] public uint FileCount;
@@ -29,11 +30,10 @@ namespace WPUI.Nitro.Files
             }
         }
 
-        [Magic("FNTB")]
+        [Magic("FNTB"), StructLayout(LayoutKind.Explicit)]
         public struct FileNameTable
         {
             [FieldOffset(0x00)] public uint NameCount;
-            public NameEntry[] NameEntries;
 
             [StructLayout(LayoutKind.Explicit)]
             public struct NameEntry
@@ -51,7 +51,9 @@ namespace WPUI.Nitro.Files
             }
         }
 
-        [Magic("FIMG")]
+        public Dictionary<FileNameTable, FileNameTable.NameEntry[]> FileNameEntriesMap;
+
+        [Magic("FIMG"), StructLayout(LayoutKind.Explicit)]
         public struct FileImageTable
         {
             [FieldOffset(0x00)] public byte[] RawData;

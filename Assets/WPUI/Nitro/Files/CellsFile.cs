@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Runtime.InteropServices;
 using WPUI.Nitro.Attributes;
@@ -34,8 +35,6 @@ namespace WPUI.Nitro.Files
             [FieldOffset(0x0A)] public short yMax;
             [FieldOffset(0x0C)] public short xMin;
             [FieldOffset(0x0E)] public short yMin;
-            //
-            public Oam[] Oams;
         }
 
 
@@ -48,6 +47,7 @@ namespace WPUI.Nitro.Files
 
         public CEBKHeader CebkHeader;
         public Cell[] Cells;
+        public Dictionary<Cell, Oam[]> CellOamsMap;
         public override void Read(BinaryReader br)
         {
             ReadHeader(br);
@@ -67,6 +67,7 @@ namespace WPUI.Nitro.Files
                         var oamsBase = cellsBase + CebkHeader.CellCount * cellStride;
                         
                         Cells = new Cell[CebkHeader.CellCount];
+                        CellOamsMap = new Dictionary<Cell, Oam[]>(CebkHeader.CellCount);
                         for (int cellIdx = 0; cellIdx < CebkHeader.CellCount; cellIdx++)
                         {
                             br.BaseStream.Seek(cellsBase + cellIdx * cellStride, SeekOrigin.Current);
@@ -85,10 +86,10 @@ namespace WPUI.Nitro.Files
                             }
 
                             br.BaseStream.Seek(oamsBase + cell.OamDataOffset, SeekOrigin.Current);
-                            cell.Oams = new Oam[cell.OamCount];
+                            var oams = CellOamsMap[cell] = new Oam[cell.OamCount];
                             for (int oamIdx = 0; oamIdx < cell.OamCount; oamIdx++)
                             {
-                                cell.Oams[oamIdx] = Oam.ReadOam(br);
+                                oams[oamIdx] = Oam.ReadOam(br);
                             }
                         }
                         break;

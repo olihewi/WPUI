@@ -17,6 +17,7 @@ namespace WPUI.Nitro.Structs
         ObjWindow = 2,
     }
     
+    [StructLayout(LayoutKind.Explicit)]
     public struct Oam
     {
         // Packed Attributes

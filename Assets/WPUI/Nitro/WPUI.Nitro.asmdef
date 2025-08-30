@@ -1,7 +1,9 @@
 {
     "name": "WPUI.Nitro",
     "rootNamespace": "",
-    "references": [],
+    "references": [
+        "GUID:d252fbf930fa8aa4d860f2bc218aa7f1"
+    ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,

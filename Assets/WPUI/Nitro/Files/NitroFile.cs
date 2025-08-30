@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using WPUI.Nitro.Attributes;
@@ -8,7 +7,6 @@ using WPUI.Nitro.Exceptions;
 
 namespace WPUI.Nitro.Files
 {
-    [RequiredAttribute(typeof(MagicAttribute))]
     public abstract class NitroFile
     {
         public virtual bool HasChildFiles => false;
